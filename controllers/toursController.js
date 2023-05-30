@@ -55,3 +55,24 @@ exports.getTours = async (req, res) => {
     });
   }
 };
+
+//update a tour based on ID
+exports.updateTour = async (req, res) => {
+  try {
+    const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+      new: true, //return the modified doc rather than the original
+      runValidators: true, //this will validate the update operation against the model's schema
+    });
+    res.status(200).json({
+      status: "Success",
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "Fail",
+      message: err,
+    });
+  }
+};
