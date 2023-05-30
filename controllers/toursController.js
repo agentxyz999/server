@@ -17,3 +17,21 @@ exports.createTour = async (req, res) => {
     });
   }
 };
+
+//get all tours
+exports.getTours = async (req, res) => {
+  try {
+    const tours = await Tour.find();
+    res.status(200).json({
+      status: "success",
+      data: {
+        tours: tours,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "Fail",
+      message: err,
+    });
+  }
+};

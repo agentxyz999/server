@@ -1,9 +1,9 @@
 const express = require("express");
-const { createTour } = require("../controllers/toursController");
-
 const router = express.Router();
 
+const { createTour, getTours } = require("../controllers/toursController");
+
 //endppoints
-router.route("/").post(createTour);
+router.route("/").get(getTours).post(createTour);
 
 module.exports = router;
