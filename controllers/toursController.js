@@ -92,3 +92,18 @@ exports.deleteTour = async (req, res) => {
     });
   }
 };
+//delete all Tours
+exports.deleteAllTour = async (req, res) => {
+  try {
+    await Tour.deleteMany();
+    res.status(204).json({
+      status: "Success",
+      data: null,
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: "Fail",
+      message: err.message,
+    });
+  }
+};
