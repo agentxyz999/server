@@ -11,12 +11,12 @@ exports.getTours = async (req, res) => {
     // 1.2 ADVANCE FILTERING : Filter the gte, gt, lte, lt using REGEX
     const queryStr = JSON.stringify(queryObj).replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
     let query = Tour.find(JSON.parse(queryStr));
+
     /*--another way of querying(EXPAND THIS LINE)---------------
       const tours = await Tour.find()
       .where("duration").equals(5)
       .where("difficulty").equals("easy");
-    ----------------------------------------------------------*/
-    /*========Advance Querying in MongoDB( <== expand this)======
+    ========Advance Querying in MongoDB( <== expand this)=======
       { difficulty: "easy", duration: {$gte: 5 }}
     ============================================================*/
 
