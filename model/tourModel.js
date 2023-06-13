@@ -50,6 +50,7 @@ const tourSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now(),
+    select: false, //this will hide the createdAt from client
   },
   startDates: [Date], //type Date but it will be an array of dates
 });
