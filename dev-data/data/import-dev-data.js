@@ -22,7 +22,7 @@ mongoose
     console.log("Unable to connect to database!", err.message);
   });
 
-//Read JSON File
+//Read tours JSON File
 const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours-simple.json`, "utf-8"));
 
 //Import data into DB
