@@ -4,15 +4,13 @@ const Tour = require("../model/tourModel");
 exports.getTours = async (req, res) => {
   try {
     //BUILD THE QUERY
-    // 1. FILTERING : filter the queryObj by deleting keys in queryObj
+    // 1.1 FILTERING : filter the queryObj by deleting keys in queryObj
     const queryObj = { ...req.query };
     const excludedFields = ["page", "limit", "sort", "fields"].forEach((el) => delete queryObj[el]);
 
-    // 2. ADVANCE FILTERING : Filter the gte, gt, lte, lt using REGEX
+    // 1.2 ADVANCE FILTERING : Filter the gte, gt, lte, lt using REGEX
     const queryStr = JSON.stringify(queryObj).replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-
-    const query = Tour.find(JSON.parse(queryStr));
-
+    let query = Tour.find(JSON.parse(queryStr));
     /*--another way of querying(EXPAND THIS LINE)---------------
       const tours = await Tour.find()
       .where("duration").equals(5)
@@ -21,6 +19,12 @@ exports.getTours = async (req, res) => {
     /*========Advance Querying in MongoDB( <== expand this)======
       { difficulty: "easy", duration: {$gte: 5 }}
     ============================================================*/
+
+    // 2. SORTING : If the client requested Sorting
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else query = query.sort("-createdAt");
 
     //EXECUTE THE QUERY
     const tours = await query;
