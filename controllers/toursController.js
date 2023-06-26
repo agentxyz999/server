@@ -1,4 +1,5 @@
 const Tour = require("../model/tourModel");
+const APIFeatures = require("../utils/features");
 
 //Get Top 5 Best Tours
 exports.topFiveBest = (req, res, next) => {
@@ -11,37 +12,13 @@ exports.topFiveBest = (req, res, next) => {
 //GET ALL TOURS
 exports.getTours = async (req, res) => {
   try {
-    //BUILD THE QUERY
-    // 1.1 FILTERING : filter the queryObj by deleting keys in queryObj
-    const queryObj = { ...req.query };
-    const excludedFields = ["page", "limit", "sort", "fields"].forEach((el) => delete queryObj[el]);
-
-    // 1.2 ADVANCE FILTERING : Filter the gte, gt, lte, lt using REGEX
-    const queryStr = JSON.stringify(queryObj).replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    let query = Tour.find(JSON.parse(queryStr));
-
-    // 2. SORTING : If the client requested Sorting
-    if (req.query.sort) {
-      //To convert to Mongo syntax i.e(price, maxGroupSize) => (price maxGroupSize)
-      const sortBy = req.query.sort.split(",").join(" ");
-      query = query.sort(sortBy);
-    } else query = query.sort("-createdAt");
-
-    // 3. FIELD LIMITING(Projecting): Limiting the response
-    if (req.query.fields) {
-      const fields = req.query.fields.split(",").join(" ");
-      query = query.select(fields);
-    } else query = query.select("-__v"); //this will exclude the "__v" field from MongoDB
-
-    // 4. Pagination
-    const page = req.query.page * 1 || 1; //convert the query string to number
-    const limit = req.query.limit * 1 || 100; //convert the query string to number
-    const skip = (page - 1) * limit;
-    //tours?page=2&limit=10 PAGE 1(1-10), PAGE 2(11-20), PAGE 3(21-30)
-    query = query.skip(skip).limit(limit);
-
     //EXECUTE THE QUERY
-    const tours = await query;
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+    const tours = await features.query;
 
     //SEND RESPONSE
     res.status(200).json({
