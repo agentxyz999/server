@@ -1,5 +1,13 @@
 const Tour = require("../model/tourModel");
 
+//Get Top 5 Best Tours
+exports.topFiveBest = (req, res, next) => {
+  req.query.limit = "5";
+  req.query.sort = "-ratingsAverage, price";
+  req.query.fields = "name, price, ratingsAverage, summary, difficulty";
+  next();
+};
+
 //GET ALL TOURS
 exports.getTours = async (req, res) => {
   try {
@@ -12,25 +20,25 @@ exports.getTours = async (req, res) => {
     const queryStr = JSON.stringify(queryObj).replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
     let query = Tour.find(JSON.parse(queryStr));
 
-    /*--another way of querying(EXPAND THIS LINE)---------------
-      const tours = await Tour.find()
-      .where("duration").equals(5)
-      .where("difficulty").equals("easy");
-    ========Advance Querying in MongoDB( <== expand this)=======
-      { difficulty: "easy", duration: {$gte: 5 }}
-    ============================================================*/
-
     // 2. SORTING : If the client requested Sorting
     if (req.query.sort) {
+      //To convert to Mongo syntax i.e(price, maxGroupSize) => (price maxGroupSize)
       const sortBy = req.query.sort.split(",").join(" ");
       query = query.sort(sortBy);
     } else query = query.sort("-createdAt");
 
-    // 3. FIELD LIMITING: Limiting the response
+    // 3. FIELD LIMITING(Projecting): Limiting the response
     if (req.query.fields) {
       const fields = req.query.fields.split(",").join(" ");
       query = query.select(fields);
-    } else query = query.select("-__v"); //this will exclude the "__v" field created by MongoDB
+    } else query = query.select("-__v"); //this will exclude the "__v" field from MongoDB
+
+    // 4. Pagination
+    const page = req.query.page * 1 || 1; //convert the query string to number
+    const limit = req.query.limit * 1 || 100; //convert the query string to number
+    const skip = (page - 1) * limit;
+    //tours?page=2&limit=10 PAGE 1(1-10), PAGE 2(11-20), PAGE 3(21-30)
+    query = query.skip(skip).limit(limit);
 
     //EXECUTE THE QUERY
     const tours = await query;
