@@ -6,7 +6,8 @@ class APIFeatures {
   filter() {
     const queryObj = { ...this.queryString };
     const excludedFields = ["page", "limit", "sort", "fields"].forEach((el) => delete queryObj[el]);
-
+    // const { page, limit, sort, fields, ...queryObj } = this.queryString;
+    //we can do this(Line 9) destructuring instead of Lines 7 and 8
     // 1.2 ADVANCE FILTERING : Filter the gte, gt, lte, lt using REGEX
     const queryStr = JSON.stringify(queryObj).replace(
       /\b(gte|gt|lte|lt)\b/g,
@@ -18,7 +19,7 @@ class APIFeatures {
   }
   sort() {
     if (this.queryString.sort) {
-      //To convert to Mongo syntax i.e(price, maxGroupSize) => (price maxGroupSize)
+      //To convert to Mongo syntax i.e(price, maxGroupSize) -> (price maxGroupSize)
       const sortBy = this.queryString.sort.split(",").join(" ");
       this.query = this.query.sort(sortBy);
     } else this.query = this.query.sort("-createdAt");

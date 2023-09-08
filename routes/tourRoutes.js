@@ -10,6 +10,7 @@ const {
   deleteAllTour,
   topFiveBest,
   getTourStats,
+  getMonthlyPlan,
 } = require("../controllers/toursController");
 
 //endppoints
@@ -18,6 +19,7 @@ router.route("/top-5-best").get(topFiveBest, getTours); //get top 5 best tours b
 
 //this aggregation route (getTourStats) needs to be put here before the ("/:id") to prevent an error
 router.route("/stats").get(getTourStats);
+router.route("/monthly-plan/:year").get(getMonthlyPlan);
 
 router.route("/").get(getTours).post(createTour);
 

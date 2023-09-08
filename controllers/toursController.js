@@ -11,6 +11,7 @@ exports.topFiveBest = (req, res, next) => {
 
 //GET ALL TOURS
 exports.getTours = async (req, res) => {
+  console.log(req.query);
   try {
     //EXECUTE THE QUERY
     const features = new APIFeatures(Tour.find(), req.query)
@@ -19,7 +20,6 @@ exports.getTours = async (req, res) => {
       .limitFields()
       .paginate();
     const tours = await features.query;
-
     //SEND RESPONSE
     res.status(200).json({
       status: "success",
@@ -109,7 +109,7 @@ exports.deleteTour = async (req, res) => {
     });
   }
 };
-//DELETE ALL TOURS
+//Delete all tours
 exports.deleteAllTour = async (req, res) => {
   try {
     await Tour.deleteMany();
@@ -117,14 +117,13 @@ exports.deleteAllTour = async (req, res) => {
       status: "Success",
       data: null,
     });
-  } catch (err) {
+  } catch (error) {
     res.status(404).json({
       status: "Fail",
-      message: err.message,
+      message: error.message,
     });
   }
 };
-
 /////////////////////////
 //AGGREGATION PIPELINES//
 /////////////////////////
@@ -139,8 +138,8 @@ exports.getTourStats = async (req, res) => {
       {
         $group: {
           // _id: null,
-          // _id: "$ratingsAverage",
-          _id: { $toUpper: "$difficulty" },
+          // _id: "$ratingsAverage", //this will group by based on ratingsAverage
+          _id: { $toUpper: "$difficulty" }, //this will group by based on difficulty
           numTours: { $sum: 1 },
           numRatings: { $sum: "$ratingsQuantity" },
           avgRating: { $avg: "$ratingsAverage" },
@@ -151,6 +150,7 @@ exports.getTourStats = async (req, res) => {
       },
       {
         $sort: { avgPrice: 1 },
+        /*$sort: { avgPrice: -1 }, sort in descending order */
       },
       // {
       //   $match: { _id: { $ne: "EASY" } },
@@ -163,7 +163,57 @@ exports.getTourStats = async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({
+    res.status(404).json({
+      status: "Failed",
+      message: err.message,
+    });
+  }
+};
+
+//get monthly plan
+exports.getMonthlyPlan = async (req, res) => {
+  try {
+    const year = req.params.year * 1;
+    const plan = await Tour.aggregate([
+      {
+        $unwind: "$startDates",
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $month: "$startDates" },
+          numTourStarts: { $sum: 1 },
+          tours: { $push: "$name" },
+        },
+      },
+      {
+        $addFields: { month: "$_id" },
+      },
+      {
+        $project: {
+          _id: 0,
+        },
+      },
+      {
+        $sort: { numTourStarts: -1 },
+      },
+      {
+        $limit: 12,
+      },
+    ]);
+    res.status(200).json({
+      status: "Success",
+      data: { plan },
+    });
+  } catch (err) {
+    res.status(404).json({
       status: "Failed",
       message: err.message,
     });
